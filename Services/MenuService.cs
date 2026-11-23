@@ -91,6 +91,45 @@ public class MenuService
 
     public MenuItem? GetItemById(int id) => _items.FirstOrDefault(i => i.Id == id);
 
+        // ---------- Поиск, фильтрация, сортировка ----------
+
+    public IEnumerable<MenuItem> SearchItems(
+        string? text = null,
+        int? categoryId = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        MenuSortOrder sort = MenuSortOrder.ByName)
+    {
+        if (minPrice.HasValue && maxPrice.HasValue && minPrice > maxPrice)
+            throw new ArgumentException("Минимальная цена не может быть больше максимальной.");
+
+        IEnumerable<MenuItem> result = _items;
+
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            var query = text.Trim();
+            result = result.Where(i =>
+                i.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                i.Description.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (categoryId.HasValue)
+            result = result.Where(i => i.CategoryId == categoryId.Value);
+
+        if (minPrice.HasValue)
+            result = result.Where(i => i.Price >= minPrice.Value);
+
+        if (maxPrice.HasValue)
+            result = result.Where(i => i.Price <= maxPrice.Value);
+
+        return sort switch
+        {
+            MenuSortOrder.ByPriceAscending => result.OrderBy(i => i.Price).ThenBy(i => i.Name),
+            MenuSortOrder.ByPriceDescending => result.OrderByDescending(i => i.Price).ThenBy(i => i.Name),
+            _ => result.OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
+        };
+    }
+
     // ---------- Вспомогательные методы ----------
 
     private int NextCategoryId() => _categories.Count == 0 ? 1 : _categories.Max(c => c.Id) + 1;

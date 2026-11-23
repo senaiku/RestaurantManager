@@ -76,6 +76,36 @@ public class OrderService
     public IEnumerable<Order> GetActiveOrders() =>
         _orders.Where(o => o.Status is OrderStatus.New or OrderStatus.InProgress or OrderStatus.Ready);
 
+            // ---------- Поиск, фильтрация, сортировка ----------
+
+    public IEnumerable<Order> SearchOrders(
+        OrderStatus? status = null,
+        DateTime? from = null,
+        DateTime? to = null,
+        OrderSortOrder sort = OrderSortOrder.ByDateNewestFirst)
+    {
+        if (from.HasValue && to.HasValue && from.Value.Date > to.Value.Date)
+            throw new ArgumentException("Начало периода не может быть позже его конца.");
+
+        IEnumerable<Order> result = _orders;
+
+        if (status.HasValue)
+            result = result.Where(o => o.Status == status.Value);
+
+        if (from.HasValue)
+            result = result.Where(o => o.CreatedAt >= from.Value.Date);
+
+        if (to.HasValue)
+            result = result.Where(o => o.CreatedAt < to.Value.Date.AddDays(1));
+
+        return sort switch
+        {
+            OrderSortOrder.ByDateOldestFirst => result.OrderBy(o => o.CreatedAt),
+            OrderSortOrder.ByTotalDescending => result.OrderByDescending(o => o.CalculateTotal()),
+            _ => result.OrderByDescending(o => o.CreatedAt)
+        };
+    }
+
     // ---------- Вспомогательные методы ----------
 
     private int NextOrderId() => _orders.Count == 0 ? 1 : _orders.Max(o => o.Id) + 1;

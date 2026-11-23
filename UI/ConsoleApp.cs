@@ -98,7 +98,8 @@ public class ConsoleApp
             ("Показать меню", ShowMenu),
             ("Добавить блюдо", AddDish),
             ("Изменить блюдо", EditDish),
-            ("Удалить блюдо", DeleteDish)
+            ("Удалить блюдо", DeleteDish),
+            ("Поиск, фильтр и сортировка", SearchDishes)
         });
 
     private void ShowMenu()
@@ -191,7 +192,52 @@ public class ConsoleApp
         _menu.DeleteItem(item.Id);
         Console.WriteLine("Блюдо удалено.");
     }
+    private void SearchDishes()
+    {
+        Console.WriteLine("Укажите условия поиска (Enter — пропустить условие).");
 
+        var text = ConsoleHelper.ReadLine("Часть названия или описания: ");
+
+        int? categoryId = null;
+        if (_menu.Categories.Count > 0)
+        {
+            ShowCategories();
+            var id = ConsoleHelper.ReadInt("Номер категории (0 — любая): ", 0);
+            if (id != 0)
+            {
+                if (_menu.GetCategoryById(id) == null)
+                {
+                    Console.WriteLine("Категории с таким номером нет.");
+                    return;
+                }
+                categoryId = id;
+            }
+        }
+
+        var minPrice = ConsoleHelper.ReadOptionalDecimal("Минимальная цена: ");
+        var maxPrice = ConsoleHelper.ReadOptionalDecimal("Максимальная цена: ");
+
+        Console.WriteLine("Сортировка: 1. По названию  2. Цена по возрастанию  3. Цена по убыванию");
+        var sort = ConsoleHelper.ReadInt("Выберите (1-3): ", 1, 3) switch
+        {
+            2 => MenuSortOrder.ByPriceAscending,
+            3 => MenuSortOrder.ByPriceDescending,
+            _ => MenuSortOrder.ByName
+        };
+
+        var found = _menu.SearchItems(text, categoryId, minPrice, maxPrice, sort).ToList();
+
+        Console.WriteLine();
+        if (found.Count == 0)
+        {
+            Console.WriteLine("Ничего не найдено.");
+            return;
+        }
+
+        Console.WriteLine($"Найдено блюд: {found.Count}");
+        foreach (var item in found)
+            Console.WriteLine($"  {item} [{CategoryName(item.CategoryId)}]");
+    }
     // ===================== КАТЕГОРИИ =====================
 
     private void CategoriesMenu() =>
@@ -262,7 +308,8 @@ public class ConsoleApp
             ("Показать заказ подробно", ShowOrderDetails),
             ("Добавить блюдо в заказ", AddItemToOrder),
             ("Убрать блюдо из заказа", RemoveItemFromOrder),
-            ("Изменить статус заказа", ChangeOrderStatus)
+            ("Изменить статус заказа", ChangeOrderStatus),
+            ("Поиск, фильтр и сортировка", SearchOrders)
         });
 
     private void CreateOrder()
@@ -442,6 +489,43 @@ public class ConsoleApp
         OrderStatus.Cancelled => "Отменён",
         _ => status.ToString()
     };
+        private void SearchOrders()
+    {
+        Console.WriteLine("Укажите условия поиска (Enter или 0 — пропустить условие).");
+
+        var statuses = Enum.GetValues<OrderStatus>();
+        for (var i = 0; i < statuses.Length; i++)
+            Console.WriteLine($"{i + 1}. {StatusName(statuses[i])}");
+
+        OrderStatus? status = null;
+        var statusChoice = ConsoleHelper.ReadInt("Статус (0 — любой): ", 0, statuses.Length);
+        if (statusChoice != 0)
+            status = statuses[statusChoice - 1];
+
+        var from = ConsoleHelper.ReadOptionalDate("Дата с (дд.мм.гггг): ");
+        var to = ConsoleHelper.ReadOptionalDate("Дата по (дд.мм.гггг): ");
+
+        Console.WriteLine("Сортировка: 1. Сначала новые  2. Сначала старые  3. По сумме (по убыванию)");
+        var sort = ConsoleHelper.ReadInt("Выберите (1-3): ", 1, 3) switch
+        {
+            2 => OrderSortOrder.ByDateOldestFirst,
+            3 => OrderSortOrder.ByTotalDescending,
+            _ => OrderSortOrder.ByDateNewestFirst
+        };
+
+        var found = _orders.SearchOrders(status, from, to, sort).ToList();
+
+        Console.WriteLine();
+        if (found.Count == 0)
+        {
+            Console.WriteLine("Ничего не найдено.");
+            return;
+        }
+
+        Console.WriteLine($"Найдено заказов: {found.Count}");
+        foreach (var order in found)
+            Console.WriteLine($"  {FormatOrder(order)}");
+    }
 
     // ======================= ОТЧЁТ =======================
 
