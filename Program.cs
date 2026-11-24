@@ -6,8 +6,11 @@ using RestaurantManager.UI;
 Console.OutputEncoding = Encoding.UTF8;
 Console.InputEncoding = Encoding.UTF8;
 
-// Данные хранятся в файле restaurant_data.json (в папке, из которой запущена программа)
-IRepository repository = new JsonRepository();
+// По умолчанию данные хранятся в файле restaurant_data.json.
+// Запуск с ключом --memory использует хранилище в памяти (данные не сохраняются).
+IRepository repository = args.Contains("--memory")
+    ? new InMemoryRepository()
+    : new JsonRepository();
 
 AppData data;
 try
