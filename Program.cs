@@ -7,10 +7,24 @@ Console.OutputEncoding = Encoding.UTF8;
 Console.InputEncoding = Encoding.UTF8;
 
 // По умолчанию данные хранятся в файле restaurant_data.json.
-// Запуск с ключом --memory использует хранилище в памяти (данные не сохраняются).
-IRepository repository = args.Contains("--memory")
-    ? new InMemoryRepository()
-    : new JsonRepository();
+// --memory: хранилище в памяти, данные не сохраняются.
+// --demo: хранилище в памяти, заполненное готовыми демонстрационными данными.
+IRepository repository;
+if (args.Contains("--demo"))
+{
+    var demoRepository = new InMemoryRepository();
+    demoRepository.Save(DemoData.Create());
+    repository = demoRepository;
+    Console.WriteLine("Демо-режим: данные тестовые и после выхода не сохраняются.");
+}
+else if (args.Contains("--memory"))
+{
+    repository = new InMemoryRepository();
+}
+else
+{
+    repository = new JsonRepository();
+}
 
 AppData data;
 try
