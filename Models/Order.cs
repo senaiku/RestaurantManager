@@ -2,9 +2,8 @@ using System.Text.Json.Serialization;
 
 namespace RestaurantManager.Models;
 
-public class Order
+public class Order : Entity
 {
-    public int Id { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 

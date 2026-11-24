@@ -132,9 +132,9 @@ public class MenuService
 
     // ---------- Вспомогательные методы ----------
 
-    private int NextCategoryId() => _categories.Count == 0 ? 1 : _categories.Max(c => c.Id) + 1;
+    private int NextCategoryId() => IdGenerator.Next(_categories);
 
-    private int NextItemId() => _items.Count == 0 ? 1 : _items.Max(i => i.Id) + 1;
+    private int NextItemId() => IdGenerator.Next(_items);
 
     private Category FindCategory(int id) =>
         GetCategoryById(id) ?? throw new KeyNotFoundException($"Категория с Id {id} не найдена.");

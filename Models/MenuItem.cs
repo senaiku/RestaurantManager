@@ -1,11 +1,9 @@
 namespace RestaurantManager.Models;
 
-public class MenuItem
+public class MenuItem : Entity
 {
     private string _name = string.Empty;
     private decimal _price;
-
-    public int Id { get; set; }
 
     public string Name
     {

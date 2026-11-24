@@ -108,7 +108,7 @@ public class OrderService
 
     // ---------- Вспомогательные методы ----------
 
-    private int NextOrderId() => _orders.Count == 0 ? 1 : _orders.Max(o => o.Id) + 1;
+    private int NextOrderId() => IdGenerator.Next(_orders);
 
     private Order FindOrder(int id) =>
         GetOrderById(id) ?? throw new KeyNotFoundException($"Заказ с Id {id} не найден.");

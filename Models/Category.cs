@@ -1,10 +1,8 @@
 namespace RestaurantManager.Models;
 
-public class Category
+public class Category : Entity
 {
     private string _name = string.Empty;
-
-    public int Id { get; set; }
 
     public string Name
     {
